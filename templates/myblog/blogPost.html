@@ -1,0 +1,133 @@
+{% extends 'home/base.html' %}
+
+{% block title %} BlogPost {% endblock %}
+{% block blogactive %} active {% endblock blogactive %}
+
+{% block body %}
+
+<!-- For adding natural time -->
+{% load humanize %}
+<!-- For adding my function -->
+{% load extratem %}
+
+<div class="container my-3">
+  <h2 class="blog-post-title">{{post.title}}</h2>
+  <p class="blog-post-meta">{{post.timeStamp}} by <a href="#">{{post.author}}</a> (<span>{{post.views}} views time</span>)</p>
+
+  <p>{{post.content|safe}}</p>
+  <hr>
+
+</div>
+
+<div class="container" id="comm">
+  <h2 class="my-3"><span class="badge badge-light">Comment({{comments.count}})</span></h2>
+
+  {% if user.is_authenticated %}
+
+  <div class="my-2">
+    <form action="/blog/postcomment#comm" method="post">{% csrf_token %}
+      <!-- <input type="text" name="comment" placeholder="Enter your comment"> -->
+
+      <div class="form-group">
+        <label for="comment">Post Comment</label>
+        <input type="text" class="form-control" id="comment" aria-describedby="comment" name="comment"
+          placeholder="Enter your comment">
+      </div>
+
+      <input type="hidden" name="postSno" value="{{post.sno}}">
+      <input type="hidden" name="parentsno" value="">
+
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+  </div>
+
+  {% else %}
+  <p>Please login to comment</p>
+  {% endif %}
+
+
+  {% for comment in comments %}
+
+  <div class="row my-3">
+    <div class="col-md-1">
+      <img src="/static/img/user.jpg" class="rounded-circle w-100 p-1" alt="...">
+    </div>
+    <div class="col-md-11"><b>{{comment.user.username}}</b> <span
+        class="badge badge-secondary">{{comment.timestamp|naturaltime}}</span>
+      <div>{{comment.comment}}</div>
+
+      <div class="reply mx-0">
+
+        {% if user.is_authenticated %}
+        <button class="btn-sm btn-primary" type="button" data-toggle="collapse" data-target="#replybox{{comment.sno}}"
+        aria-expanded="false" aria-controls="{{comment.sno}}">
+        Reply
+      </button>
+
+      <button class="btn-sm btn-primary" type="button" data-toggle="collapse" data-target="#rcomments{{comment.sno}}"
+        aria-expanded="false" aria-controls="{{comment.sno}}">
+        Comments
+      </button>
+
+        <div class="collapse" id="replybox{{comment.sno}}">
+          <div class="card card-body my-2">
+
+            <form action="/blog/postcomment#comm" method="post">{% csrf_token %}
+
+              <div class="form-group">
+                <label for="comment">Post a Reply</label>
+                <input type="text" class="form-control" id="comment" aria-describedby="comment" name="comment"
+                  placeholder="Enter your comment">
+                <input type="hidden" name="parentsno" value="{{comment.sno}}">
+              </div>
+
+              <input type="hidden" name="postSno" value="{{post.sno}}">
+
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+
+          </div>
+        </div>
+        {% else %}
+        <button class="btn-sm btn-primary" type="button" data-toggle="collapse" data-target="#replybox{{comment.sno}}"
+          aria-expanded="false" aria-controls="{{comment.sno}}" disabled>
+          Login to Reply
+        </button>
+        {% endif %}
+
+        <div class="collapse replies my-2" id="rcomments{{comment.sno}}">
+          {% for reply in replyDict|get_val:comment.sno %}
+
+          <div class="row my-2">
+            <div class="col-md-1">
+              <img src="/static/img/user.jpg" class="rounded-circle w-75 p-1 my-1" alt="...">
+            </div>
+
+            <div class="col-md-11"><b>{{reply.user.username}}</b> <span
+                class="badge badge-secondary">{{reply.timestamp|naturaltime}}</span>
+              <div>{{reply.comment}}</div>
+            </div>
+
+            <!-- <div class="col-md-11 my-3">
+                {{reply.comment}}<br>
+              </div> -->
+          </div>
+
+          {% endfor %}
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+<div class="container my-3">
+  <hr>
+  <a href="/blog" role="button" class="btn btn-success"><-- Back</a>
+</div>
+
+{% endblock %}
